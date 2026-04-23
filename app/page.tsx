@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 const CAL_STD = "https://calendly.com/theepageautomation/new-meeting";
 const CAL_ESS = "https://calendly.com/theepageautomation/essential";
-const HERO = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=85&auto=format";
+const HERO = "https://images.unsplash.com/photo-1757359056339-22968344cce6?w=1920&q=85&auto=format";
 
 const NAV_LINKS = [["Work","#work"],["Packages","#packages"],["Reviews","#reviews"],["About","#studio"]];
 
