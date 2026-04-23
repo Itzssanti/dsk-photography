@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 const CAL_STD = "https://calendly.com/theepageautomation/new-meeting";
 const CAL_ESS = "https://calendly.com/theepageautomation/essential";
@@ -8,10 +8,14 @@ const HERO = "https://images.unsplash.com/photo-1757359056339-22968344cce6?w=192
 const NAV_LINKS = [["Work","#work"],["Packages","#packages"],["Reviews","#reviews"],["About","#studio"]];
 
 const PORTFOLIO = [
-  { loc:"WILLOW GLEN", title:"Ranch on Mary Ave", bed:3, bath:2, sqft:"1,940", n:"007", img:"https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80" },
-  { loc:"SANTA CLARA", title:"Townhome on The Alameda", bed:3, bath:2.5, sqft:"1,580", n:"008", img:"https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80" },
-  { loc:"SARATOGA", title:"Hillside modern on Saratoga Ave", bed:4, bath:3, sqft:"2,480", n:"001", img:"https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80" },
-  { loc:"LOS GATOS", title:"Glass box above the ridge", bed:5, bath:4.5, sqft:"3,920", n:"002", img:"https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80" },
+  { loc:"SARATOGA",      title:"Hillside modern on Saratoga Ave",  bed:4, bath:3,   sqft:"2,480", n:"001", size:"lg", img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=80" },
+  { loc:"LOS GATOS",    title:"Glass box above the ridge",         bed:5, bath:4.5, sqft:"3,920", n:"002", size:"sm", img:"https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=80" },
+  { loc:"CAMPBELL",     title:"Mid-century on Winchester",         bed:3, bath:2,   sqft:"1,640", n:"003", size:"sm", img:"https://images.unsplash.com/photo-1565182999561-18d7dc61c393?w=1200&q=80" },
+  { loc:"SAN JOSE",     title:"Craftsman on Naglee",               bed:4, bath:3,   sqft:"2,100", n:"004", size:"lg", img:"https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1600&q=80" },
+  { loc:"CUPERTINO",    title:"Eichler restoration",               bed:3, bath:2,   sqft:"1,780", n:"005", size:"sm", img:"https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=80" },
+  { loc:"MOUNTAIN VIEW",title:"Downtown penthouse",                bed:2, bath:2,   sqft:"1,320", n:"006", size:"sm", img:"https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80" },
+  { loc:"WILLOW GLEN",  title:"Ranch on Mary Ave",                 bed:3, bath:2,   sqft:"1,940", n:"007", size:"lg", img:"https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=80" },
+  { loc:"SANTA CLARA",  title:"Townhome on The Alameda",           bed:3, bath:2.5, sqft:"1,580", n:"008", size:"sm", img:"https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&q=80" },
 ];
 
 const REVIEWS = [
@@ -29,6 +33,12 @@ export default function Home() {
   const [pkg, setPkg] = useState<"photos"|"video">("video");
   const [addons, setAddons] = useState<Set<string>>(new Set());
 
+  // Carousel state
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(true);
+  const [progress, setProgress] = useState(0);
+
   useEffect(() => {
     const move = (e: MouseEvent) => {
       if (curDot.current) { curDot.current.style.left=e.clientX+"px"; curDot.current.style.top=e.clientY+"px"; }
@@ -39,10 +49,49 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("on"); }), { threshold: 0.1 });
-    document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+    const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("on"); }), { threshold: 0.08 });
+    document.querySelectorAll(".reveal, .rimg").forEach(el => obs.observe(el));
     return () => obs.disconnect();
   }, []);
+
+  // Carousel scroll tracking
+  const updateEdges = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft < max - 4);
+    setProgress(max > 0 ? el.scrollLeft / max : 0);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    updateEdges();
+    el.addEventListener("scroll", updateEdges, { passive: true });
+    window.addEventListener("resize", updateEdges);
+    return () => { el.removeEventListener("scroll", updateEdges); window.removeEventListener("resize", updateEdges); };
+  }, [updateEdges]);
+
+  // Carousel drag-to-scroll
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    let down = false, startX = 0, startScroll = 0;
+    const onDown = (e: MouseEvent) => { down=true; startX=e.pageX; startScroll=el.scrollLeft; el.style.cursor="grabbing"; };
+    const onMove = (e: MouseEvent) => { if (!down) return; el.scrollLeft = startScroll-(e.pageX-startX); };
+    const onUp = () => { down=false; el.style.cursor="grab"; };
+    el.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { el.removeEventListener("mousedown", onDown); window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, []);
+
+  const scrollByPage = (dir: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  };
 
   const toggleAddon = (a: string) => setAddons(prev => { const n = new Set(prev); n.has(a) ? n.delete(a) : n.add(a); return n; });
 
@@ -64,23 +113,26 @@ export default function Home() {
         body{-webkit-font-smoothing:antialiased;overflow-x:hidden;}
         *,a,button,select{cursor:none!important;}
         .disp{font-family:'Cormorant Garamond',Georgia,serif;}
-        @keyframes up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes up{from{opacity:0;transform:translate3d(0,32px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
         @keyframes fadein{from{opacity:0}to{opacity:1}}
-        .au{animation:up 1s cubic-bezier(0.16,1,0.3,1) both;}
-        .ai{animation:fadein 1.4s ease both;}
-        .d1{animation-delay:.12s}.d2{animation-delay:.26s}.d3{animation-delay:.4s}.d4{animation-delay:.54s}
-        .reveal{opacity:0;transform:translateY(18px);transition:opacity 0.85s cubic-bezier(0.16,1,0.3,1),transform 0.85s cubic-bezier(0.16,1,0.3,1);}
-        .reveal.on{opacity:1;transform:translateY(0);}
-        .nav-a{font-size:13px;color:#111;text-decoration:none;opacity:0.55;transition:opacity 0.2s;font-weight:400;}
+        .au{animation:up 0.9s cubic-bezier(0.22,1,0.36,1) both;will-change:transform,opacity;}
+        .ai{animation:fadein 1.1s cubic-bezier(0.22,1,0.36,1) both;will-change:opacity;}
+        .d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.32s}.d4{animation-delay:.44s}
+        .reveal{opacity:0;transform:translate3d(0,20px,0);transition:opacity 0.7s cubic-bezier(0.22,1,0.36,1),transform 0.7s cubic-bezier(0.22,1,0.36,1);will-change:transform,opacity;}
+        .reveal.on{opacity:1;transform:translate3d(0,0,0);}
+        .rimg img{transition:transform 0.9s cubic-bezier(0.22,1,0.36,1),opacity 0.9s cubic-bezier(0.22,1,0.36,1);transform:scale(1.06);opacity:0;will-change:transform,opacity;}
+        .rimg.on img{transform:scale(1);opacity:1;}
+        .nav-a{font-size:13px;color:#111;text-decoration:none;opacity:0.55;transition:opacity 0.22s cubic-bezier(0.22,1,0.36,1);font-weight:400;}
         .nav-a:hover{opacity:1;}
-        .img-hover{transition:transform 0.6s cubic-bezier(0.16,1,0.3,1);}
+        .img-hover{transition:transform 0.7s cubic-bezier(0.22,1,0.36,1);will-change:transform;}
         .img-wrap:hover .img-hover{transform:scale(1.04);}
-        .pkg-btn{padding:11px 0;font-size:13px;font-weight:400;border:1px solid #E0DDD7;background:#fff;color:#111;flex:1;transition:all 0.15s;}
+        .pkg-btn{padding:11px 0;font-size:13px;font-weight:400;border:1px solid #E0DDD7;background:#fff;color:#111;flex:1;transition:all 0.18s cubic-bezier(0.22,1,0.36,1);}
         .pkg-btn.active{background:#111;color:#fff;border-color:#111;}
-        .addon-btn{padding:14px 12px;font-size:12px;font-weight:400;border:1px solid #E0DDD7;background:#fff;color:#111;text-align:left;transition:all 0.15s;line-height:1.3;}
+        .addon-btn{padding:14px 12px;font-size:12px;font-weight:400;border:1px solid #E0DDD7;background:#fff;color:#111;text-align:left;transition:all 0.18s cubic-bezier(0.22,1,0.36,1);line-height:1.3;}
         .addon-btn.sel{background:#111;color:#fff;border-color:#111;}
         .addon-btn small{display:block;opacity:0.45;font-size:10px;margin-top:2px;}
         select{appearance:none;-webkit-appearance:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 12px center;background-color:#fff;padding-right:32px!important;}
+        #work ::-webkit-scrollbar{display:none;}
       `}</style>
 
       {/* CURSOR */}
@@ -133,33 +185,66 @@ export default function Home() {
         </div>
       </section>
 
-      {/* WORK */}
-      <section id="work" style={{ padding:"88px 40px",background:C.bg }}>
-        <div style={{ maxWidth:1120,margin:"0 auto" }}>
-          <div className="reveal" style={{ marginBottom:48 }}>
-            {label("01 — Work")}
-            <h2 className="disp" style={{ fontSize:"clamp(44px,5.5vw,80px)",fontWeight:500,lineHeight:1,letterSpacing:"-0.02em",marginTop:12 }}>
-              Recent shoots across<br/>the South Bay.
-            </h2>
+      {/* WORK — horizontal carousel */}
+      <section id="work" style={{ padding:"88px 0",background:C.bg }}>
+        <div style={{ maxWidth:1120,margin:"0 auto",padding:"0 40px" }}>
+          <div className="reveal" style={{ marginBottom:40,display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:16 }}>
+            <div>
+              {label("01 — Work")}
+              <h2 className="disp" style={{ fontSize:"clamp(44px,5.5vw,80px)",fontWeight:500,lineHeight:1,letterSpacing:"-0.02em",marginTop:12 }}>
+                Recent shoots across<br/>the South Bay.
+              </h2>
+            </div>
+            <p style={{ fontSize:11,letterSpacing:"0.12em",textTransform:"uppercase",color:C.mid }}>{PORTFOLIO.length} of 24 properties · 2025</p>
+          </div>
+        </div>
+
+        {/* Full-bleed scroller */}
+        <div style={{ position:"relative" }}>
+          {/* Arrow left */}
+          <div style={{ position:"absolute",top:0,bottom:56,left:0,width:40,display:"flex",alignItems:"center",justifyContent:"center",zIndex:3,pointerEvents:"none" }}>
+            <button onClick={()=>scrollByPage(-1)} disabled={!canLeft}
+              style={{ pointerEvents:"auto",width:44,height:44,background:canLeft?C.ink:"transparent",color:canLeft?"#fff":C.border,border:`1px solid ${canLeft?C.ink:C.border}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.18s cubic-bezier(0.22,1,0.36,1)",cursor:canLeft?"pointer":"default" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            </button>
+          </div>
+          {/* Arrow right */}
+          <div style={{ position:"absolute",top:0,bottom:56,right:0,width:40,display:"flex",alignItems:"center",justifyContent:"center",zIndex:3,pointerEvents:"none" }}>
+            <button onClick={()=>scrollByPage(1)} disabled={!canRight}
+              style={{ pointerEvents:"auto",width:44,height:44,background:canRight?C.ink:"transparent",color:canRight?"#fff":C.border,border:`1px solid ${canRight?C.ink:C.border}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.18s cubic-bezier(0.22,1,0.36,1)",cursor:canRight?"pointer":"default" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
           </div>
 
-          {/* 2-col editorial grid */}
-          <div style={{ display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:2 }}>
-            {PORTFOLIO.map((p,i) => (
-              <div key={i} className="reveal img-wrap" style={{ position:"relative",overflow:"hidden",transitionDelay:`${i*0.08}s` }}>
-                <div style={{ aspectRatio: i%2===0?"4/3":"3/4",overflow:"hidden" }}>
-                  <img src={p.img} alt={p.title} className="img-hover" style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} />
-                </div>
-                <div style={{ paddingTop:14,paddingBottom:28,display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
-                  <div>
-                    <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:6 }}>{p.loc}</p>
-                    <p className="disp" style={{ fontSize:22,fontWeight:400 }}>{p.title}</p>
-                    <p style={{ fontSize:12,color:C.mid,marginTop:4 }}>{p.bed} bed · {p.bath} ba · {p.sqft} sqft</p>
+          {/* Scroller */}
+          <div ref={scrollerRef}
+            style={{ display:"flex",gap:12,overflowX:"auto",scrollSnapType:"x mandatory",paddingLeft:40,paddingRight:40,paddingBottom:16,scrollbarWidth:"none",cursor:"grab",userSelect:"none" }}>
+            {PORTFOLIO.map((p,i) => {
+              const isLg = p.size === "lg";
+              return (
+                <div key={i} style={{ flex:"0 0 auto",width:isLg?"min(620px,70vw)":"min(340px,52vw)",scrollSnapAlign:"start" }}>
+                  <div className="rimg reveal" style={{ overflow:"hidden",aspectRatio:isLg?"3/2":"4/5",transitionDelay:`${i*0.05}s` }}>
+                    <img src={p.img} alt={p.title} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} />
                   </div>
-                  <span style={{ fontSize:11,color:C.border,letterSpacing:"0.1em",paddingTop:2 }}>{p.n}</span>
+                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginTop:14,gap:12 }}>
+                    <div>
+                      <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:6 }}>{p.loc}</p>
+                      <p className="disp" style={{ fontSize:isLg?22:18,fontWeight:400,lineHeight:1.2,maxWidth:"22ch" }}>{p.title}</p>
+                    </div>
+                    <span style={{ fontSize:11,color:C.border,letterSpacing:"0.1em",paddingTop:2,flexShrink:0 }}>{p.n}</span>
+                  </div>
+                  <p style={{ fontSize:12,color:C.mid,marginTop:6 }}>{p.bed} bed · {p.bath} ba · {p.sqft} sqft</p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+            <div style={{ flex:"0 0 1px" }} />
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ padding:"0 40px",marginTop:8 }}>
+            <div style={{ height:1,background:C.border,position:"relative" }}>
+              <div style={{ position:"absolute",top:-1,left:0,height:3,background:C.ink,width:`${Math.max(6,progress*100)}%`,transition:"width 160ms linear" }} />
+            </div>
           </div>
         </div>
       </section>
