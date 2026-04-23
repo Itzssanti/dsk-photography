@@ -236,13 +236,14 @@ export default function Home() {
       {/* ── STUDIO — warm cream ── */}
       <section id="studio" style={{ borderTop:`1px solid ${L.border}`,padding:"96px 40px",background:L.bg }}>
         <div style={{ maxWidth:1120,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",gap:80,alignItems:"center" }}>
-          <div className="reveal" style={{ position:"relative",aspectRatio:"9/16",background:"#000",overflow:"hidden" }}>
+          {/* 4:5 crop window — iframe is taller (9:16) so top/bottom get clipped */}
+          <div className="reveal" style={{ position:"relative",width:"100%",aspectRatio:"4/5",overflow:"hidden",background:"#000" }}>
             <iframe
-              src="https://www.youtube.com/embed/2jJNaSdJ3Io?autoplay=0&mute=1&loop=1&playlist=2jJNaSdJ3Io&controls=1&rel=0&modestbranding=1"
+              src="https://www.youtube.com/embed/2jJNaSdJ3Io?autoplay=1&mute=1&loop=1&playlist=2jJNaSdJ3Io&controls=0&rel=0&modestbranding=1&playsinline=1"
               title="DSK Photography — Studio Reel"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              style={{ position:"absolute",inset:0,width:"100%",height:"100%",border:"none" }}
+              style={{ position:"absolute",top:"50%",left:0,transform:"translateY(-50%)",width:"100%",height:"142%",border:"none" }}
             />
           </div>
           <div className="reveal" style={{ transitionDelay:"0.14s" }}>
