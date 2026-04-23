@@ -1,172 +1,195 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const CALENDLY_STANDARD = "https://calendly.com/theepageautomation/new-meeting";
-const CALENDLY_ESSENTIAL = "https://calendly.com/theepageautomation/essential";
+const CAL_STD = "https://calendly.com/theepageautomation/new-meeting";
+const CAL_ESS = "https://calendly.com/theepageautomation/essential";
+const HERO = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=85&auto=format";
 
-// Placeholder hero image (real estate, free from Unsplash via direct URL)
-const HERO_IMG = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1800&q=80";
+const NAV_LINKS = [["Work","#work"],["Packages","#packages"],["Reviews","#reviews"],["About","#studio"]];
 
-const reviews = [
-  { quote: "The photos sold the house in nine days. Our seller was speechless. DSK is the only studio we call.", name: "Elena Park", brokerage: "Coldwell Banker — Los Gatos" },
-  { quote: "Shows up, works quietly, delivers the next morning. No drama, no re-shoots. I book before I list.", name: "Marcus Wu", brokerage: "Compass — San Jose" },
-  { quote: "Twilight shoots that actually look like twilight, not a video game. Buyers notice.", name: "Priya Natarajan", brokerage: "Intero — Cupertino" },
-  { quote: "The first set of images made our client cry. In a good way.", name: "Jordan Ellis", brokerage: "Sereno — Saratoga" },
+const PORTFOLIO = [
+  { loc:"WILLOW GLEN", title:"Ranch on Mary Ave", bed:3, bath:2, sqft:"1,940", n:"007", img:"https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80" },
+  { loc:"SANTA CLARA", title:"Townhome on The Alameda", bed:3, bath:2.5, sqft:"1,580", n:"008", img:"https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80" },
+  { loc:"SARATOGA", title:"Hillside modern on Saratoga Ave", bed:4, bath:3, sqft:"2,480", n:"001", img:"https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80" },
+  { loc:"LOS GATOS", title:"Glass box above the ridge", bed:5, bath:4.5, sqft:"3,920", n:"002", img:"https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80" },
 ];
 
+const REVIEWS = [
+  { q:"The photos sold the house in nine days. Our seller was speechless. DSK is the only studio we call.", name:"Elena Park", co:"Coldwell Banker — Los Gatos" },
+  { q:"Shows up, works quietly, delivers the next morning. No drama, no re-shoots. I book before I list.", name:"Marcus Wu", co:"Compass — San Jose" },
+  { q:"Twilight shoots that actually look like twilight, not a video game. Buyers notice.", name:"Priya Natarajan", co:"Intero — Cupertino" },
+  { q:"The first set of images made our client cry. In a good way.", name:"Jordan Ellis", co:"Sereno — Saratoga" },
+];
+
+const ADDONS = ["Virtual staging","Twilight exterior","Drone aerial","2D floorplan","3D Matterport tour","Vertical social reel","Detail shots","Rush delivery"];
+
 export default function Home() {
-  const dot = useRef<HTMLDivElement>(null);
-  const ring = useRef<HTMLDivElement>(null);
+  const curDot = useRef<HTMLDivElement>(null);
+  const curRing = useRef<HTMLDivElement>(null);
+  const [pkg, setPkg] = useState<"photos"|"video">("video");
+  const [addons, setAddons] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const move = (e: MouseEvent) => {
-      if (dot.current) { dot.current.style.left = e.clientX+"px"; dot.current.style.top = e.clientY+"px"; }
-      if (ring.current) { ring.current.style.left = e.clientX+"px"; ring.current.style.top = e.clientY+"px"; }
+      if (curDot.current) { curDot.current.style.left=e.clientX+"px"; curDot.current.style.top=e.clientY+"px"; }
+      if (curRing.current) { curRing.current.style.left=e.clientX+"px"; curRing.current.style.top=e.clientY+"px"; }
     };
     window.addEventListener("mousemove", move);
     return () => window.removeEventListener("mousemove", move);
   }, []);
 
   useEffect(() => {
-    const els = document.querySelectorAll(".reveal");
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("on"); }),
-      { threshold: 0.1 }
-    );
-    els.forEach(el => obs.observe(el));
+    const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("on"); }), { threshold: 0.1 });
+    document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
-  return (
-    <>
-      <div className="cur-dot" ref={dot} />
-      <div className="cur-ring" ref={ring} />
+  const toggleAddon = (a: string) => setAddons(prev => { const n = new Set(prev); n.has(a) ? n.delete(a) : n.add(a); return n; });
 
-      {/* ── NAV ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-12 py-5"
-           style={{ background: "rgba(245,243,238,0.88)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--border)" }}>
-        <span className="font-display font-semibold tracking-widest text-lg" style={{ letterSpacing: "0.22em" }}>D S K</span>
-        <div className="hidden md:flex items-center gap-10">
-          <a href="#work" className="nav-link">Work</a>
-          <a href="#packages" className="nav-link">Packages</a>
-          <a href="#reviews" className="nav-link">Reviews</a>
-          <a href="#studio" className="nav-link">About</a>
+  const C = {
+    bg: "#FAFAF8", card: "#F0EDE6", dark: "#1A1A1A", ink: "#111111",
+    mid: "#888480", border: "#E0DDD7", accent: "#C0784A",
+  };
+
+  const label = (txt: string, light=false) => (
+    <p style={{ fontSize:10, letterSpacing:"0.2em", textTransform:"uppercase", color: light?"rgba(255,255,255,0.45)":C.mid, fontWeight:400 }}>{txt}</p>
+  );
+
+  return (
+    <div style={{ background:C.bg, color:C.ink, fontFamily:"'DM Sans', system-ui, sans-serif", fontWeight:300 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0;}
+        html{scroll-behavior:smooth;}
+        body{-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+        *,a,button,select{cursor:none!important;}
+        .disp{font-family:'Cormorant Garamond',Georgia,serif;}
+        @keyframes up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadein{from{opacity:0}to{opacity:1}}
+        .au{animation:up 1s cubic-bezier(0.16,1,0.3,1) both;}
+        .ai{animation:fadein 1.4s ease both;}
+        .d1{animation-delay:.12s}.d2{animation-delay:.26s}.d3{animation-delay:.4s}.d4{animation-delay:.54s}
+        .reveal{opacity:0;transform:translateY(18px);transition:opacity 0.85s cubic-bezier(0.16,1,0.3,1),transform 0.85s cubic-bezier(0.16,1,0.3,1);}
+        .reveal.on{opacity:1;transform:translateY(0);}
+        .nav-a{font-size:13px;color:#111;text-decoration:none;opacity:0.55;transition:opacity 0.2s;font-weight:400;}
+        .nav-a:hover{opacity:1;}
+        .img-hover{transition:transform 0.6s cubic-bezier(0.16,1,0.3,1);}
+        .img-wrap:hover .img-hover{transform:scale(1.04);}
+        .pkg-btn{padding:11px 0;font-size:13px;font-weight:400;border:1px solid #E0DDD7;background:#fff;color:#111;flex:1;transition:all 0.15s;}
+        .pkg-btn.active{background:#111;color:#fff;border-color:#111;}
+        .addon-btn{padding:14px 12px;font-size:12px;font-weight:400;border:1px solid #E0DDD7;background:#fff;color:#111;text-align:left;transition:all 0.15s;line-height:1.3;}
+        .addon-btn.sel{background:#111;color:#fff;border-color:#111;}
+        .addon-btn small{display:block;opacity:0.45;font-size:10px;margin-top:2px;}
+        select{appearance:none;-webkit-appearance:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 12px center;background-color:#fff;padding-right:32px!important;}
+      `}</style>
+
+      {/* CURSOR */}
+      <div ref={curDot} style={{ position:"fixed",top:0,left:0,width:6,height:6,background:C.ink,borderRadius:"50%",pointerEvents:"none",zIndex:9999,transform:"translate(-50%,-50%)" }} />
+      <div ref={curRing} style={{ position:"fixed",top:0,left:0,width:24,height:24,border:`1px solid rgba(17,17,17,0.25)`,borderRadius:"50%",pointerEvents:"none",zIndex:9998,transform:"translate(-50%,-50%)",transition:"left 0.3s cubic-bezier(0.16,1,0.3,1),top 0.3s cubic-bezier(0.16,1,0.3,1)" }} />
+
+      {/* NAV */}
+      <nav style={{ position:"fixed",top:0,left:0,right:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 40px",height:64,background:"rgba(250,250,248,0.92)",backdropFilter:"blur(20px)",borderBottom:`1px solid ${C.border}` }}>
+        <span className="disp" style={{ fontSize:18,fontWeight:500,letterSpacing:"0.18em" }}>D S K</span>
+        <div style={{ display:"flex",gap:32 }}>
+          {NAV_LINKS.map(([l,h]) => <a key={l} href={h} className="nav-a">{l}</a>)}
         </div>
-        <a href={CALENDLY_ESSENTIAL} target="_blank" rel="noreferrer"
-           className="btn-outline text-xs" style={{ padding:"10px 22px" }}>
+        <a href={CAL_ESS} target="_blank" rel="noreferrer"
+           style={{ fontSize:12,fontWeight:400,color:C.ink,textDecoration:"none",border:`1px solid ${C.ink}`,padding:"8px 18px",transition:"opacity 0.2s" }}
+           onMouseEnter={e=>e.currentTarget.style.opacity="0.5"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
           Book a shoot
         </a>
       </nav>
 
-      {/* ── HERO ── */}
-      <section className="relative min-h-screen flex flex-col justify-end overflow-hidden">
-        {/* Background image */}
-        <div className="absolute inset-0 ai" style={{
-          backgroundImage: `url(${HERO_IMG})`,
-          backgroundSize: "cover", backgroundPosition: "center",
-        }} />
-        {/* Overlay */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)" }} />
-
-        {/* Top right label */}
-        <div className="absolute top-24 right-8 md:right-12 text-right ai" style={{ animationDelay:"0.8s" }}>
-          <p className="label label-white">Saratoga Residence</p>
-          <p className="label label-white" style={{ marginTop:"2px" }}>Twilight · 4,200 sqft</p>
+      {/* HERO */}
+      <section style={{ position:"relative",height:"100vh",minHeight:640,display:"flex",flexDirection:"column",justifyContent:"flex-end",overflow:"hidden" }}>
+        <div className="ai" style={{ position:"absolute",inset:0,backgroundImage:`url(${HERO})`,backgroundSize:"cover",backgroundPosition:"center 40%" }} />
+        <div style={{ position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,0.68) 0%,rgba(0,0,0,0.05) 50%,transparent 100%)" }} />
+        {/* Top right counter */}
+        <div className="au d4" style={{ position:"absolute",top:80,right:40,textAlign:"right" }}>
+          <p style={{ fontSize:10,letterSpacing:"0.18em",color:"rgba(255,255,255,0.4)",textTransform:"uppercase" }}>01 / 006</p>
+          <p style={{ fontSize:10,letterSpacing:"0.15em",color:"rgba(255,255,255,0.4)",textTransform:"uppercase",marginTop:2 }}>Saratoga Residence</p>
+          <p style={{ fontSize:10,letterSpacing:"0.15em",color:"rgba(255,255,255,0.4)",textTransform:"uppercase",marginTop:2 }}>Twilight · 5,200 sqm</p>
         </div>
-
-        <div className="relative px-8 md:px-12 pb-16 md:pb-20">
-          <p className="label label-white mb-5 au">South Bay · Est. 2024</p>
-          <h1 className="font-display text-white au d1"
-              style={{ fontSize:"clamp(52px,9vw,130px)", lineHeight:0.93, fontWeight:500, letterSpacing:"-0.02em" }}>
-            Listings that<br />move<span style={{ color:"#fff" }}>.</span>
+        <div style={{ position:"relative",padding:"0 40px 56px" }}>
+          <p className="au" style={{ fontSize:10,letterSpacing:"0.22em",textTransform:"uppercase",color:"rgba(255,255,255,0.5)",marginBottom:16 }}>South Bay · Est. 2024</p>
+          <h1 className="disp au d1" style={{ fontSize:"clamp(60px,9.5vw,132px)",lineHeight:0.9,fontWeight:500,color:"#fff",letterSpacing:"-0.02em",maxWidth:900 }}>
+            Listings that move.
           </h1>
-          <p className="text-white au d2 mt-5" style={{ fontSize:"16px", opacity:0.75, maxWidth:"460px", lineHeight:1.65 }}>
-            Architectural photography for South Bay real estate.<br />
-            Clean frames, honest light, 24-hour delivery.
+          <p className="au d2" style={{ fontSize:15,color:"rgba(255,255,255,0.65)",marginTop:20,lineHeight:1.7 }}>
+            Architectural photography for South Bay real estate.<br/>Clean frames, honest light, same-week delivery.
           </p>
-          <div className="flex flex-wrap gap-4 mt-8 au d3">
-            <a href={CALENDLY_STANDARD} target="_blank" rel="noreferrer" className="btn-dark" style={{ background:"#fff", color:"#0F0F0F" }}>
+          <div className="au d3" style={{ display:"flex",gap:12,marginTop:28,flexWrap:"wrap" }}>
+            <a href={CAL_STD} target="_blank" rel="noreferrer"
+               style={{ display:"inline-block",background:"#fff",color:C.ink,padding:"13px 28px",fontSize:13,fontWeight:400,textDecoration:"none",transition:"opacity 0.2s" }}
+               onMouseEnter={e=>e.currentTarget.style.opacity="0.8"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
               Book a shoot
             </a>
-            <a href="#work" className="btn-outline-white">View work →</a>
+            <a href="#work"
+               style={{ display:"inline-block",border:"1px solid rgba(255,255,255,0.5)",color:"#fff",padding:"12px 28px",fontSize:13,fontWeight:400,textDecoration:"none",transition:"opacity 0.2s" }}
+               onMouseEnter={e=>e.currentTarget.style.opacity="0.6"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+              View work →
+            </a>
           </div>
         </div>
       </section>
 
-      {/* ── WORK / PORTFOLIO ── */}
-      <section id="work" className="px-8 md:px-12 py-24" style={{ background:"var(--cream)" }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="reveal mb-12">
-            <p className="label mb-3">01 — Work</p>
-            <h2 className="font-display" style={{ fontSize:"clamp(40px,6vw,80px)", fontWeight:500, lineHeight:1, letterSpacing:"-0.02em" }}>
-              Recent shoots across<br />the South Bay.
+      {/* WORK */}
+      <section id="work" style={{ padding:"88px 40px",background:C.bg }}>
+        <div style={{ maxWidth:1120,margin:"0 auto" }}>
+          <div className="reveal" style={{ marginBottom:48 }}>
+            {label("01 — Work")}
+            <h2 className="disp" style={{ fontSize:"clamp(44px,5.5vw,80px)",fontWeight:500,lineHeight:1,letterSpacing:"-0.02em",marginTop:12 }}>
+              Recent shoots across<br/>the South Bay.
             </h2>
           </div>
 
-          {/* Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
-            {[
-              { loc:"SARATOGA", title:"Hillside modern on Saratoga Ave", bed:4, bath:3, sqft:"2,480", num:"001", tall:true },
-              { loc:"LOS GATOS", title:"Glass box above the ridge", bed:5, bath:4.5, sqft:"3,920", num:"002", tall:false },
-              { loc:"CAMPBELL", title:"Mid-century on Winchester", bed:3, bath:2, sqft:"1,840", num:"003", tall:false },
-              { loc:"WILLOW GLEN", title:"Craftsman with pool house", bed:4, bath:3.5, sqft:"3,100", num:"004", tall:false },
-              { loc:"ALMADEN", title:"New build with valley views", bed:5, bath:4, sqft:"4,200", num:"005", tall:true },
-              { loc:"CUPERTINO", title:"Corner lot, all light", bed:3, bath:2, sqft:"1,680", num:"006", tall:false },
-            ].map((p, i) => (
-              <div key={i} className="reveal group relative overflow-hidden bg-neutral-200"
-                   style={{ aspectRatio: i===0||i===4 ? "3/4" : "4/3", transitionDelay:`${i*0.07}s` }}>
-                {/* Placeholder — gray with number */}
-                <div className="absolute inset-0 flex items-center justify-center"
-                     style={{ background:`hsl(${30+i*8},8%,${82-i*3}%)` }}>
-                  <span className="font-display" style={{ fontSize:"clamp(48px,8vw,100px)", color:"rgba(0,0,0,0.06)", fontWeight:500 }}>{p.num}</span>
+          {/* 2-col editorial grid */}
+          <div style={{ display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:2 }}>
+            {PORTFOLIO.map((p,i) => (
+              <div key={i} className="reveal img-wrap" style={{ position:"relative",overflow:"hidden",transitionDelay:`${i*0.08}s` }}>
+                <div style={{ aspectRatio: i%2===0?"4/3":"3/4",overflow:"hidden" }}>
+                  <img src={p.img} alt={p.title} className="img-hover" style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} />
                 </div>
-                {/* Hover overlay */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4"
-                     style={{ background:"linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)" }}>
-                  <p className="label" style={{ color:"rgba(255,255,255,0.6)", marginBottom:"4px" }}>{p.loc}</p>
-                  <p className="font-display text-white" style={{ fontSize:"15px", fontWeight:400 }}>{p.title}</p>
-                  <p style={{ fontSize:"11px", color:"rgba(255,255,255,0.5)", marginTop:"4px" }}>{p.bed} bed · {p.bath} ba · {p.sqft} sqft</p>
+                <div style={{ paddingTop:14,paddingBottom:28,display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
+                  <div>
+                    <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:6 }}>{p.loc}</p>
+                    <p className="disp" style={{ fontSize:22,fontWeight:400 }}>{p.title}</p>
+                    <p style={{ fontSize:12,color:C.mid,marginTop:4 }}>{p.bed} bed · {p.bath} ba · {p.sqft} sqft</p>
+                  </div>
+                  <span style={{ fontSize:11,color:C.border,letterSpacing:"0.1em",paddingTop:2 }}>{p.n}</span>
                 </div>
-                <span className="absolute top-3 left-3 sec-num">{p.num}</span>
               </div>
             ))}
           </div>
-          <p className="reveal mt-4 text-center" style={{ fontSize:"12px", color:"var(--mid)" }}>
-            Portfolio photos being added — samples available on request · hello@dskphoto.co
-          </p>
         </div>
       </section>
 
-      {/* ── STUDIO ── */}
-      <section id="studio" style={{ background:"var(--cream)", borderTop:"1px solid var(--border)" }}>
-        <div className="max-w-6xl mx-auto px-8 md:px-12 py-24 grid md:grid-cols-2 gap-16 items-center">
-          {/* Left: placeholder photo */}
-          <div className="reveal" style={{ aspectRatio:"4/5", background:"#D8D4CC", position:"relative", overflow:"hidden" }}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="font-display" style={{ fontSize:"80px", color:"rgba(0,0,0,0.07)", fontWeight:500 }}>DSK</span>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-6" style={{ background:"linear-gradient(to top,rgba(0,0,0,0.35),transparent)" }}>
-              <p className="label" style={{ color:"rgba(255,255,255,0.7)" }}>Sony FX30 · Nikon glass</p>
-            </div>
+      {/* STUDIO */}
+      <section id="studio" style={{ borderTop:`1px solid ${C.border}`,padding:"88px 40px",background:C.bg }}>
+        <div style={{ maxWidth:1120,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",gap:80,alignItems:"center" }}>
+          {/* Photo */}
+          <div className="reveal" style={{ position:"relative",overflow:"hidden" }}>
+            <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80" alt="Camera"
+                 style={{ width:"100%",aspectRatio:"4/5",objectFit:"cover",display:"block" }} />
           </div>
-          {/* Right: copy */}
-          <div className="reveal d1s">
-            <p className="label mb-4">02 — Studio</p>
-            <h2 className="font-display mb-6" style={{ fontSize:"clamp(36px,4.5vw,64px)", fontWeight:500, lineHeight:1.05, letterSpacing:"-0.02em" }}>
-              One photographer.<br />Every shoot.
+          {/* Copy */}
+          <div className="reveal" style={{ transitionDelay:"0.12s" }}>
+            {label("02 — Studio")}
+            <h2 className="disp" style={{ fontSize:"clamp(40px,4.5vw,68px)",fontWeight:500,lineHeight:1.05,letterSpacing:"-0.02em",marginTop:20,marginBottom:24 }}>
+              One photographer.<br/>Every shoot.
             </h2>
-            <p style={{ color:"var(--mid)", fontSize:"15px", lineHeight:1.75, marginBottom:"16px" }}>
-              DSK is an independent, single-operator studio. No teams, no subcontractors.
+            <p style={{ fontSize:15,color:C.mid,lineHeight:1.75,marginBottom:14 }}>
+              DSK operates as an independent, single-operator studio, no teams, no subcontractors.
             </p>
-            <p style={{ color:"var(--mid)", fontSize:"15px", lineHeight:1.75, marginBottom:"32px" }}>
-              Every listing is handled personally — from the walkthrough to final delivery.
+            <p style={{ fontSize:15,color:C.mid,lineHeight:1.75 }}>
+              Every listing is handled personally from shoot to final delivery.
             </p>
-            <div className="h-px mb-8" style={{ background:"var(--border)" }} />
-            <div className="grid grid-cols-3 gap-6">
-              {[["1:1","Client focus"],["24h","Avg turnaround"],["12d","Median DOM"]].map(([n,l]) => (
+            <div style={{ height:1,background:C.border,margin:"32px 0" }} />
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16 }}>
+              {[["1:1","Client Focus"],["48h","Avg turnaround"],["12d","Median days-on-market"]].map(([n,l])=>(
                 <div key={n}>
-                  <p className="font-display" style={{ fontSize:"36px", fontWeight:500, lineHeight:1 }}>{n}</p>
-                  <p className="label mt-1">{l}</p>
+                  <p className="disp" style={{ fontSize:44,fontWeight:500,lineHeight:1 }}>{n}</p>
+                  <p style={{ fontSize:11,letterSpacing:"0.12em",textTransform:"uppercase",color:C.mid,marginTop:8 }}>{l}</p>
                 </div>
               ))}
             </div>
@@ -174,161 +197,225 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PACKAGES ── */}
-      <section id="packages" style={{ background:"var(--cream)", borderTop:"1px solid var(--border)" }}>
-        <div className="max-w-6xl mx-auto px-8 md:px-12 py-24">
-          <div className="reveal mb-12">
-            <p className="label mb-3">03 — Packages</p>
-            <h2 className="font-display" style={{ fontSize:"clamp(40px,6vw,80px)", fontWeight:500, lineHeight:1, letterSpacing:"-0.02em" }}>
+      {/* PACKAGES */}
+      <section id="packages" style={{ borderTop:`1px solid ${C.border}`,padding:"88px 40px",background:C.bg }}>
+        <div style={{ maxWidth:1120,margin:"0 auto" }}>
+          <div className="reveal" style={{ marginBottom:48 }}>
+            {label("03 — Packages")}
+            <h2 className="disp" style={{ fontSize:"clamp(52px,7vw,96px)",fontWeight:500,lineHeight:1,letterSpacing:"-0.02em",marginTop:12 }}>
               Packages.
             </h2>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Standard */}
-            <div className="reveal flex flex-col p-10" style={{ background:"#EDEAE3" }}>
-              <div className="flex items-center justify-between mb-8">
-                <p className="label">Photos</p>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,border:`1px solid ${C.border}` }}>
+            {/* Photos */}
+            <div className="reveal" style={{ padding:"48px 40px",background:C.card,borderRight:`1px solid ${C.border}` }}>
+              {label("Photos")}
+              <div style={{ marginTop:24,marginBottom:8 }}>
+                <span style={{ fontSize:28,fontWeight:300,verticalAlign:"super",lineHeight:1 }}>$</span>
+                <span className="disp" style={{ fontSize:88,fontWeight:500,lineHeight:1,letterSpacing:"-0.04em" }}>150</span>
               </div>
-              <p className="label mb-1" style={{ color:"var(--mid)" }}>Starting at</p>
-              <p className="font-display" style={{ fontSize:"72px", fontWeight:500, lineHeight:1, letterSpacing:"-0.03em" }}>
-                <sup style={{ fontSize:"32px", verticalAlign:"super" }}>$</sup>150
+              <p style={{ fontSize:11,color:C.mid,marginBottom:24 }}>starting</p>
+              <p style={{ fontSize:14,color:C.ink,lineHeight:1.65,marginBottom:28 }}>
+                Clean, honest listing photography.<br/>Most single-family homes.
               </p>
-              <p className="mt-3 mb-6" style={{ fontSize:"14px", color:"var(--mid)", lineHeight:1.65 }}>
-                Clean, honest listing photography. Most single-family homes.
-              </p>
-              <div className="h-px mb-6" style={{ background:"var(--border)" }} />
-              <ul style={{ fontSize:"13px", color:"var(--mid)", lineHeight:2.2, marginBottom:"auto" }}>
-                {["Up to 25 edited images","Interior + exterior","24-hour turnaround","MLS-sized + full-res"].map(f => (
-                  <li key={f} style={{ display:"flex", alignItems:"center", gap:"12px" }}>
-                    <span style={{ color:"var(--ink)", fontSize:"16px" }}>—</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <a href={CALENDLY_STANDARD} target="_blank" rel="noreferrer"
-                 className="btn-outline mt-10 text-center" style={{ display:"block" }}>
+              <div style={{ height:1,background:C.border,marginBottom:24 }} />
+              {["Up to 25 edited images","Interior + exterior","24-hour turnaround","MLS-sized + full-res"].map(f=>(
+                <div key={f} style={{ display:"flex",alignItems:"center",gap:14,marginBottom:8 }}>
+                  <span style={{ fontSize:14,color:C.mid }}>—</span>
+                  <span style={{ fontSize:13,color:C.ink }}>{f}</span>
+                </div>
+              ))}
+              <a href={CAL_STD} target="_blank" rel="noreferrer"
+                 style={{ display:"block",textAlign:"center",marginTop:40,padding:"14px",fontSize:13,fontWeight:400,color:C.ink,textDecoration:"none",border:`1px solid ${C.ink}`,transition:"opacity 0.2s" }}
+                 onMouseEnter={e=>e.currentTarget.style.opacity="0.5"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
                 Book Photos
               </a>
             </div>
-
-            {/* Essential */}
-            <div className="reveal d1s flex flex-col p-10" style={{ background:"var(--ink)" }}>
-              <div className="flex items-center justify-between mb-8">
-                <p className="label label-white">Photos + Video</p>
-                <span style={{ fontSize:"9px", letterSpacing:"0.2em", textTransform:"uppercase", color:"var(--blue)", fontWeight:500 }}>Most Booked</span>
+            {/* Photos + Video */}
+            <div className="reveal" style={{ padding:"48px 40px",background:C.dark,transitionDelay:"0.1s" }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
+                {label("Photos + Video", true)}
+                <span style={{ fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:C.accent,fontWeight:500 }}>Most Booked</span>
               </div>
-              <p className="label mb-1" style={{ color:"rgba(255,255,255,0.35)" }}>Starting at</p>
-              <p className="font-display text-white" style={{ fontSize:"72px", fontWeight:500, lineHeight:1, letterSpacing:"-0.03em" }}>
-                <sup style={{ fontSize:"32px", verticalAlign:"super" }}>$</sup>400
+              <div style={{ marginTop:24,marginBottom:8 }}>
+                <span style={{ fontSize:28,fontWeight:300,color:"#fff",verticalAlign:"super",lineHeight:1 }}>$</span>
+                <span className="disp" style={{ fontSize:88,fontWeight:500,lineHeight:1,letterSpacing:"-0.04em",color:"#fff" }}>400</span>
+              </div>
+              <p style={{ fontSize:11,color:"rgba(255,255,255,0.35)",marginBottom:24 }}>starting</p>
+              <p style={{ fontSize:14,color:"rgba(255,255,255,0.6)",lineHeight:1.65,marginBottom:28 }}>
+                Stills plus a short walkthrough video.<br/>Listings that need motion.
               </p>
-              <p className="mt-3 mb-6" style={{ fontSize:"14px", color:"rgba(255,255,255,0.5)", lineHeight:1.65 }}>
-                Stills plus a cinematic walkthrough. Listings that need motion.
-              </p>
-              <div className="h-px mb-6" style={{ background:"rgba(255,255,255,0.08)" }} />
-              <ul style={{ fontSize:"13px", lineHeight:2.2, marginBottom:"auto" }}>
-                {[
-                  ["Up to 40 edited images", true],
-                  ["60–90s cinematic walkthrough", true],
-                  ["Interior + exterior", true],
-                  ["Vertical cut for social", true],
-                  ["24-hour turnaround", false],
-                ].map(([f, hi]) => (
-                  <li key={f as string} style={{ display:"flex", alignItems:"center", gap:"12px", color: hi ? "#fff" : "rgba(255,255,255,0.35)" }}>
-                    <span style={{ color:"var(--blue)", fontSize:"16px" }}>—</span>{f as string}
-                  </li>
-                ))}
-              </ul>
-              <a href={CALENDLY_ESSENTIAL} target="_blank" rel="noreferrer"
-                 className="btn-outline-white mt-10 text-center" style={{ display:"block" }}>
+              <div style={{ height:1,background:"rgba(255,255,255,0.08)",marginBottom:24 }} />
+              {[["Up to 40 edited images",true],["45–60s walkthrough video",true],["Interior + exterior",true],["Vertical cut for social",true],["24-hour turnaround",false]].map(([f,hi])=>(
+                <div key={f as string} style={{ display:"flex",alignItems:"center",gap:14,marginBottom:8 }}>
+                  <span style={{ fontSize:14,color:C.accent }}>—</span>
+                  <span style={{ fontSize:13,color:hi?"#fff":"rgba(255,255,255,0.35)" }}>{f as string}</span>
+                </div>
+              ))}
+              <a href={CAL_ESS} target="_blank" rel="noreferrer"
+                 style={{ display:"block",textAlign:"center",marginTop:40,padding:"14px",fontSize:13,fontWeight:400,color:"#fff",textDecoration:"none",border:"1px solid rgba(255,255,255,0.35)",transition:"opacity 0.2s" }}
+                 onMouseEnter={e=>e.currentTarget.style.opacity="0.6"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
                 Book Photos + Video
               </a>
             </div>
           </div>
-
-          <p className="reveal mt-6" style={{ fontSize:"13px", color:"var(--mid)" }}>
-            Multiple listings/month? <a href={`mailto:hello@dskphoto.co`} style={{ color:"var(--ink)", textDecoration:"underline", textUnderlineOffset:"3px" }}>Email for a retainer rate.</a>
-          </p>
         </div>
       </section>
 
-      {/* ── REVIEWS ── */}
-      <section id="reviews" style={{ background:"var(--dark)", borderTop:"1px solid #1e1e28" }}>
-        <div className="max-w-6xl mx-auto px-8 md:px-12 py-24">
-          <div className="reveal flex items-end justify-between mb-12 flex-wrap gap-4">
+      {/* BOOKING FORM */}
+      <section style={{ borderTop:`1px solid ${C.border}`,padding:"88px 40px",background:C.bg }}>
+        <div style={{ maxWidth:640,margin:"0 auto" }}>
+          <div className="reveal" style={{ marginBottom:40 }}>
+            {label("Request a shoot")}
+            <h2 className="disp" style={{ fontSize:"clamp(36px,4vw,60px)",fontWeight:500,lineHeight:1.05,marginTop:12,letterSpacing:"-0.02em" }}>
+              Tell us about<br/>the listing.
+            </h2>
+          </div>
+          <div className="reveal" style={{ display:"flex",flexDirection:"column",gap:28 }}>
+            {/* Address */}
             <div>
-              <p className="label label-white mb-3">04 — Reviews</p>
-              <h2 className="font-display text-white" style={{ fontSize:"clamp(36px,5vw,72px)", fontWeight:500, lineHeight:1, letterSpacing:"-0.02em" }}>
-                From agents<br />who re-book.
+              <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:10 }}>Property Address</p>
+              <input type="text" placeholder="123 Lincoln Ave, San Jose" style={{ width:"100%",padding:"12px 0",fontSize:14,borderBottom:`1px solid ${C.border}`,outline:"none",background:"transparent",color:C.ink }} />
+            </div>
+            {/* Sqft */}
+            <div>
+              <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:10 }}>Square Footage</p>
+              <input type="text" placeholder="2,400" style={{ width:"100%",padding:"12px 0",fontSize:14,borderBottom:`1px solid ${C.border}`,outline:"none",background:"transparent",color:C.ink }} />
+            </div>
+            {/* Package toggle */}
+            <div>
+              <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:10 }}>Package</p>
+              <div style={{ display:"flex",gap:0 }}>
+                {(["photos","video"] as const).map(p=>(
+                  <button key={p} onClick={()=>setPkg(p)} className={`pkg-btn${pkg===p?" active":""}`}
+                          style={{ padding:"11px 0",fontSize:13,fontWeight:400,border:`1px solid ${C.border}`,background:pkg===p?C.ink:"#fff",color:pkg===p?"#fff":C.ink,flex:1,transition:"all 0.15s" }}>
+                    {p==="photos"?"Photos":"Photos + Video"}
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize:11,color:C.mid,marginTop:8 }}>
+                {pkg==="photos"?"Shoot length: ~1.5 hr · 24-hour delivery · $150":"Shoot length: ~2.5 hr · 24-hour delivery · $400"}
+              </p>
+            </div>
+            {/* Shoot window */}
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:20 }}>
+              <div>
+                <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:10 }}>Shoot Window</p>
+                <select style={{ width:"100%",padding:"12px 0",fontSize:13,borderBottom:`1px solid ${C.border}`,outline:"none",background:"transparent",color:C.ink }}>
+                  <option>8:00 am – 10:00 am</option>
+                  <option>10:00 am – 12:00 pm</option>
+                  <option>12:00 pm – 2:00 pm</option>
+                  <option>2:00 pm – 4:00 pm</option>
+                </select>
+              </div>
+              <div>
+                <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid,marginBottom:10 }}>How Many Photos</p>
+                <select style={{ width:"100%",padding:"12px 0",fontSize:13,borderBottom:`1px solid ${C.border}`,outline:"none",background:"transparent",color:C.ink }}>
+                  <option>Up to {pkg==="photos"?"25":"40"} — included</option>
+                </select>
+              </div>
+            </div>
+            {/* Add-ons */}
+            <div>
+              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:10 }}>
+                <p style={{ fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.mid }}>Add-ons</p>
+                <p style={{ fontSize:10,letterSpacing:"0.1em",color:C.mid }}>{addons.size} selected · quoted separately</p>
+              </div>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:4 }}>
+                {[
+                  ["Virtual staging","per photo"],
+                  ["Twilight exterior","golden / blue hour"],
+                  ["Drone aerial","4–6 frames"],
+                  ["2D floorplan","MLS-ready"],
+                  ["3D Matterport tour","dollhouse + walkthrough"],
+                  ["Vertical social reel","15–30s for IG / TikTok"],
+                  ["Detail shots","finishes, hardware, texture"],
+                  ["Rush delivery","same-day edit"],
+                ].map(([a,sub])=>(
+                  <button key={a} onClick={()=>toggleAddon(a)}
+                          style={{ padding:"12px",fontSize:12,fontWeight:400,border:`1px solid ${addons.has(a)?C.ink:C.border}`,background:addons.has(a)?C.ink:"#fff",color:addons.has(a)?"#fff":C.ink,textAlign:"left",transition:"all 0.15s" }}>
+                    {a}
+                    <span style={{ display:"block",fontSize:10,opacity:0.45,marginTop:2 }}>{sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Submit */}
+            <a href={pkg==="photos"?CAL_STD:CAL_ESS} target="_blank" rel="noreferrer"
+               style={{ display:"block",textAlign:"center",background:C.ink,color:"#fff",padding:"16px",fontSize:13,fontWeight:400,textDecoration:"none",marginTop:8,transition:"opacity 0.2s" }}
+               onMouseEnter={e=>e.currentTarget.style.opacity="0.75"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+              Request shoot →
+            </a>
+            <p style={{ fontSize:11,color:C.mid,textAlign:"center" }}>No charge until the shoot is confirmed.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* REVIEWS */}
+      <section id="reviews" style={{ background:C.dark,borderTop:`1px solid #222`,padding:"88px 40px" }}>
+        <div style={{ maxWidth:1120,margin:"0 auto" }}>
+          <div className="reveal" style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:56,flexWrap:"wrap",gap:16 }}>
+            <div>
+              {label("04 — Reviews", true)}
+              <h2 className="disp" style={{ fontSize:"clamp(44px,6vw,84px)",fontWeight:500,lineHeight:0.95,color:"#fff",letterSpacing:"-0.02em",marginTop:12 }}>
+                From agents<br/>who re-book.
               </h2>
             </div>
-            <p className="label" style={{ color:"rgba(255,255,255,0.25)" }}>4.9 avg · growing</p>
+            <p style={{ fontSize:11,letterSpacing:"0.15em",textTransform:"uppercase",color:"rgba(255,255,255,0.2)" }}>4.9 avg · growing</p>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-0">
-            {reviews.map((r, i) => (
-              <div key={i} className="reveal py-8 pr-8" style={{ borderTop:"1px solid rgba(255,255,255,0.07)", transitionDelay:`${i*0.08}s` }}>
-                <span className="font-display" style={{ fontSize:"32px", color:"var(--blue)", lineHeight:1 }}>&ldquo;</span>
-                <p className="font-display text-white mt-2" style={{ fontSize:"clamp(16px,2vw,22px)", lineHeight:1.45, fontWeight:400 }}>
-                  {r.quote}
-                </p>
-                <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.3)", marginTop:"16px", letterSpacing:"0.05em" }}>
-                  {r.name} — {r.brokerage}
-                </p>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:0 }}>
+            {REVIEWS.map((r,i)=>(
+              <div key={i} className="reveal" style={{ padding:"32px 32px 32px 0",borderTop:"1px solid rgba(255,255,255,0.07)",transitionDelay:`${i*0.08}s` }}>
+                <span className="disp" style={{ fontSize:36,lineHeight:1,color:C.accent }}>&ldquo;</span>
+                <p className="disp" style={{ fontSize:"clamp(16px,1.8vw,22px)",color:"#fff",lineHeight:1.45,fontWeight:400,marginTop:8 }}>{r.q}</p>
+                <p style={{ fontSize:11,color:"rgba(255,255,255,0.28)",marginTop:20,letterSpacing:"0.05em" }}>{r.name} — {r.co}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section style={{ background:"var(--cream)", borderTop:"1px solid var(--border)" }}>
-        <div className="max-w-6xl mx-auto px-8 md:px-12 py-28 text-center">
-          <p className="label reveal mb-6">Ready?</p>
-          <h2 className="font-display reveal d1s" style={{ fontSize:"clamp(52px,9vw,120px)", fontWeight:500, lineHeight:0.92, letterSpacing:"-0.03em" }}>
+      {/* CTA */}
+      <section style={{ padding:"112px 40px",background:C.bg,textAlign:"center",borderTop:`1px solid ${C.border}` }}>
+        <div className="reveal">
+          {label("Ready?")}
+          <h2 className="disp" style={{ fontSize:"clamp(64px,10vw,128px)",fontWeight:500,lineHeight:0.9,letterSpacing:"-0.03em",marginTop:20,marginBottom:40 }}>
             Book the shoot.
           </h2>
-          <div className="reveal d2s mt-10">
-            <a href={CALENDLY_ESSENTIAL} target="_blank" rel="noreferrer" className="btn-dark" style={{ fontSize:"14px", padding:"16px 40px" }}>
-              Check availability
-            </a>
-            <p className="mt-4" style={{ fontSize:"12px", color:"var(--mid)", letterSpacing:"0.05em" }}>
-              Typical response within 2 hours · Mon–Sat
-            </p>
-          </div>
+          <a href={CAL_ESS} target="_blank" rel="noreferrer"
+             style={{ display:"inline-block",background:C.ink,color:"#fff",padding:"16px 44px",fontSize:14,fontWeight:400,textDecoration:"none",transition:"opacity 0.2s" }}
+             onMouseEnter={e=>e.currentTarget.style.opacity="0.75"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+            Check availability
+          </a>
+          <p style={{ fontSize:12,color:C.mid,marginTop:16,letterSpacing:"0.06em" }}>Typical response within 2 hours · Mon–Sat</p>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer style={{ background:"var(--dark)", borderTop:"1px solid #1e1e28" }}>
-        <div className="max-w-6xl mx-auto px-8 md:px-12 py-16 grid md:grid-cols-4 gap-10">
-          <div className="md:col-span-1">
-            <p className="font-display text-white text-2xl mb-3" style={{ letterSpacing:"0.2em" }}>DSK</p>
-            <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>
-              Real estate photography for the South Bay.<br />Independent studio, based in San Jose.
-            </p>
-          </div>
+      {/* FOOTER */}
+      <footer style={{ background:C.dark,borderTop:"1px solid #1e1e1e",padding:"56px 40px 40px" }}>
+        <div style={{ maxWidth:1120,margin:"0 auto",display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:40,marginBottom:48 }}>
           <div>
-            <p className="label label-white mb-4">Site</p>
-            {[["Work","#work"],["Packages","#packages"],["Reviews","#reviews"],["About","#studio"]].map(([l,h]) => (
-              <a key={l} href={h} className="block nav-link mb-3" style={{ color:"rgba(255,255,255,0.5)" }}>{l}</a>
-            ))}
+            <span className="disp" style={{ fontSize:22,fontWeight:500,color:"#fff",letterSpacing:"0.18em" }}>D S K</span>
+            <p style={{ fontSize:13,color:"rgba(255,255,255,0.35)",lineHeight:1.7,marginTop:12 }}>Real estate photography for the South Bay. Independent studio, based in San Jose.</p>
           </div>
-          <div>
-            <p className="label label-white mb-4">Contact</p>
-            <a href="mailto:hello@dskphoto.co" className="block nav-link mb-3" style={{ color:"rgba(255,255,255,0.5)" }}>hello@dskphoto.co</a>
-            <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.35)" }}>San Jose, CA</p>
-          </div>
-          <div>
-            <p className="label label-white mb-4">Elsewhere</p>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="block nav-link mb-3" style={{ color:"rgba(255,255,255,0.5)" }}>Instagram ↗</a>
-          </div>
+          {[["Site",[["Work","#work"],["Packages","#packages"],["Reviews","#reviews"],["About","#studio"]]],
+            ["Contact",[["hello@dskphoto.co","mailto:hello@dskphoto.co"],["San Jose, CA","#"]]],
+            ["Elsewhere",[["Instagram ↗","https://instagram.com"]]]
+          ].map(([title, links])=>(
+            <div key={title as string}>
+              <p style={{ fontSize:10,letterSpacing:"0.2em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:20 }}>{title as string}</p>
+              {(links as string[][]).map(([l,h])=>(
+                <a key={l} href={h} style={{ display:"block",fontSize:13,color:"rgba(255,255,255,0.45)",textDecoration:"none",marginBottom:10,transition:"opacity 0.2s" }}
+                   onMouseEnter={e=>e.currentTarget.style.opacity="1"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>{l}</a>
+              ))}
+            </div>
+          ))}
         </div>
-        <div className="max-w-6xl mx-auto px-8 md:px-12 pb-8 flex items-center justify-between flex-wrap gap-4"
-             style={{ borderTop:"1px solid rgba(255,255,255,0.05)", paddingTop:"24px" }}>
-          <p style={{ fontSize:"11px", color:"rgba(255,255,255,0.2)", letterSpacing:"0.1em", textTransform:"uppercase" }}>© 2026 DSK Photography</p>
-          <p style={{ fontSize:"11px", color:"rgba(255,255,255,0.2)", letterSpacing:"0.08em", textTransform:"uppercase" }}>San Jose · 37.3382° N, 121.8863° W</p>
+        <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:24,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8 }}>
+          <p style={{ fontSize:11,color:"rgba(255,255,255,0.18)",letterSpacing:"0.1em",textTransform:"uppercase" }}>© 2026 DSK Photography</p>
+          <p style={{ fontSize:11,color:"rgba(255,255,255,0.18)",letterSpacing:"0.08em",textTransform:"uppercase" }}>San Jose · 37.3382° N, 121.8863° W</p>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
