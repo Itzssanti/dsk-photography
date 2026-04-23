@@ -157,7 +157,7 @@ export default function Home() {
             Architectural photography for South Bay real estate.<br/>Clean frames, honest light, same-week delivery.
           </p>
           <div className="au d3" style={{ display:"flex",gap:14,marginTop:32,flexWrap:"wrap" }}>
-            <a href={CAL_STD} target="_blank" rel="noreferrer"
+            <a href="#packages"
                style={{ display:"inline-block",background:D.ink,color:D.bg,padding:"14px 30px",fontSize:13,fontWeight:400,letterSpacing:"0.06em",textDecoration:"none",transition:"opacity 0.22s" }}
                onMouseEnter={e=>e.currentTarget.style.opacity="0.8"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
               Book a shoot
@@ -236,8 +236,14 @@ export default function Home() {
       {/* ── STUDIO — warm cream ── */}
       <section id="studio" style={{ borderTop:`1px solid ${L.border}`,padding:"96px 40px",background:L.bg }}>
         <div style={{ maxWidth:1120,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",gap:80,alignItems:"center" }}>
-          <div className="rimg reveal" style={{ overflow:"hidden",aspectRatio:"4/5",background:L.border }}>
-            <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80" alt="Camera" style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} />
+          <div className="reveal" style={{ position:"relative",aspectRatio:"9/16",background:"#000",overflow:"hidden" }}>
+            <iframe
+              src="https://www.youtube.com/embed/2jJNaSdJ3Io?autoplay=0&mute=1&loop=1&playlist=2jJNaSdJ3Io&controls=1&rel=0&modestbranding=1"
+              title="DSK Photography — Studio Reel"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ position:"absolute",inset:0,width:"100%",height:"100%",border:"none" }}
+            />
           </div>
           <div className="reveal" style={{ transitionDelay:"0.14s" }}>
             {eyebrow("02 — Studio")}
@@ -326,6 +332,20 @@ export default function Home() {
                 Book Photos + Video
               </a>
             </div>
+          </div>
+
+          {/* Free quote card */}
+          <div className="reveal" style={{ marginTop:2,border:`1px solid ${L.border}`,borderTop:"none",padding:"32px 44px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:24,flexWrap:"wrap",background:"#F2EEE6" }}>
+            <div>
+              <p style={{ fontSize:10,letterSpacing:"0.22em",textTransform:"uppercase",color:gold,marginBottom:8 }}>Custom shoot</p>
+              <p className="disp" style={{ fontSize:24,fontWeight:400,color:L.ink,letterSpacing:"-0.01em" }}>Larger home, unusual scope, or add-ons?</p>
+              <p style={{ fontSize:13,color:L.mid,marginTop:6,lineHeight:1.65 }}>Tell me what the listing needs — I'll send a free personalized quote the same day.</p>
+            </div>
+            <a href={`mailto:hello@dskphoto.co?subject=Custom shoot quote`}
+               style={{ flexShrink:0,padding:"13px 28px",fontSize:12,fontWeight:400,letterSpacing:"0.1em",textTransform:"uppercase",color:L.ink,textDecoration:"none",border:`1px solid ${L.ink}`,transition:"opacity 0.2s",whiteSpace:"nowrap" }}
+               onMouseEnter={e=>e.currentTarget.style.opacity="0.45"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+              Get a free quote →
+            </a>
           </div>
         </div>
       </section>
